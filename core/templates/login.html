@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema do Síndico</title>
+    <!-- Incluindo o CSS direto aqui para a página de login -->
+    <style>
+        /* Fundo da página */
+        body {
+            background-image: url('/static/imagens-pi/image.png');
+            background-size: cover;
+            background-position: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Estilo do container do formulário de login */
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9); /* Fundo branco com transparência */
+            border-radius: 10px; /* Bordas arredondadas */
+            padding: 40px;
+            width: 80%;
+            max-width: 400px; /* Largura máxima do formulário */
+            margin: 100px auto; /* Centraliza o formulário na tela */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombrinha sutil */
+        }
+
+        /* Título do formulário */
+        .login-container h2 {
+            text-align: center;
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Estilo dos campos de input */
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .login-container input[type="text"]:focus,
+        .login-container input[type="password"]:focus {
+            border-color: #ff9800; /* Cor laranja quando o campo está em foco */
+            outline: none;
+        }
+
+        /* Estilo do botão de login */
+        .login-container .login-button {
+            width: 100%;
+            padding: 14px;
+            background-color: #ff9800; /* Cor laranja */
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            display: inline-block;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-container .login-button:hover {
+            background-color: #e68900; /* Cor mais escura ao passar o mouse */
+        }
+
+        /* Estilo de mensagem de erro (se necessário) */
+        .error-message {
+            color: red;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* Link de cadastro */
+        .register-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            text-decoration: none;
+            color: #ff9800;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Login</h2>
+
+        <!-- Formulário de login -->
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            
+            <!-- Campo de usuário -->
+            <input type="text" name="username" placeholder="Usuário" required>
+
+            <!-- Campo de senha -->
+            <input type="password" name="password" placeholder="Senha" required>
+
+            <!-- Botão de login -->
+            <button type="submit" class="login-button">Entrar</button>
+        </form>
+
+        <!-- Link de cadastro -->
+        <div class="register-link">
+            <p>Ainda não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se</a></p>
+        </div>
+
+        <!-- Exibição de erro (se houver) -->
+        {% if messages %}
+            <div class="error-message">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>

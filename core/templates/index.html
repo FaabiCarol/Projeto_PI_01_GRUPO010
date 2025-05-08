@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner de Demandas Condominiais (PDC Web)</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Definir a fonte para toda a página, igual a listar_solicitacoes.html */
+        body {
+            font-family: Arial, sans-serif !important;
+        }
+
+        /* Estilo do menu, igual a listar_solicitacoes.html */
+        .menu {
+            background-color: rgba(227, 101, 22, 0.9);
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        .menu li {
+            display: inline;
+        }
+        .menu a {
+            color: rgb(255, 255, 255);
+            text-decoration: none;
+            font-size: 1.2em;
+            padding: 10px 20px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .menu a:hover {
+            background-color: #b95212;
+        }
+
+        /* Estilo para a mensagem de boas-vindas movida */
+        .bem-vindo {
+            color: white;
+            text-align: right;
+            margin: 10px;
+        }
+
+        /* Sobrescrever o fundo do container para branco translúcido */
+        .container {
+            background-color: rgba(237, 214, 146, 0.9) !important;
+            color: #000 !important; /* Texto preto */
+        }
+
+        /* Estilizar elementos do formulário com mesmo tamanho de fonte */
+        .container label,
+        .container input,
+        .container textarea,
+        .container select,
+        .container button {
+            color: #000 !important;
+            font-size: 1.1em; /* Mesmo tamanho de fonte para todos */
+        }
+
+        /* Reduzir a largura do campo Data */
+        .container input[type="date"] {
+            width: 200px;
+        }
+
+        /* Estilo do botão Salvar Solicitação, inspirado no botão Nova Solicitação */
+        .container button {
+            background-color: rgb(255, 140, 0);
+            color: white !important;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .container button:hover {
+            background-color: rgb(213, 130, 27);
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu de Navegação -->
+    <nav class="menu">
+        <ul>
+            <li><a href="{% url 'index' %}">Início</a></li>
+            <li><a href="{% url 'listar_solicitacoes' %}">Lista de Solicitações</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'logout' %}">Sair do Perfil</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Mensagem de boas-vindas, agora fora e abaixo do menu -->
+    {% if user.is_authenticated %}
+        <p class="bem-vindo">Bem-vindo, {{ user.username }}!</p>
+    {% endif %}
+
+    <h1>Registrar Solicitação</h1>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="container">
+        <br>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="origem">Origem</label>
+            <input type="text" id="origem" name="origem" required>
+        
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" name="titulo" required>
+        
+            <label for="descricao">Descrição:</label>
+            <textarea id="descricao" name="descricao" required></textarea>
+        
+            <label for="data">Data:</label>
+            <input type="date" id="data" name="data" required>
+        
+            <label for="arquivo">Anexar Arquivo:</label>
+            <input type="file" id="arquivo" name="arquivo" multiple>
+        
+            <label for="status">Status:</label>
+            <select id="status" name="status">
+                <option value="pendente">Pendente</option>
+                <option value="em_andamento">Em Andamento</option>
+                <option value="resolvido">Resolvido</option>
+            </select>
+        
+            <label for="prioridade">Prioridade:</label>
+            <select id="prioridade" name="prioridade">
+                <option value="verde">Não Urgente</option>
+                <option value="amarelo">Urgente, mas não importante</option>
+                <option value="vermelho">Urgente e importante</option>
+            </select>
+        
+            <button type="submit">Salvar Solicitação</button>
+        </form>
+    </div>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

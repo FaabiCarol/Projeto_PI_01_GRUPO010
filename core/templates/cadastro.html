@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Sistema do Síndico</title>
+    <style>
+        body {
+            background-image: url('/static/imagens-pi/image.png');
+            background-size: cover;
+            background-position: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .cadastro-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 40px;
+            width: 80%;
+            max-width: 400px;
+            margin: 100px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .cadastro-container h2 {
+            text-align: center;
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .cadastro-container input[type="text"],
+        .cadastro-container input[type="password"],
+        .cadastro-container input[type="email"],
+        .cadastro-container input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .cadastro-container input[type="text"]:focus,
+        .cadastro-container input[type="password"]:focus,
+        .cadastro-container input[type="email"]:focus {
+            border-color: #ff9800;
+            outline: none;
+        }
+
+        .cadastro-container .cadastro-button {
+            width: 100%;
+            padding: 14px;
+            background-color: #ff9800;
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            display: inline-block;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cadastro-container .cadastro-button:hover {
+            background-color: #e68900;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .login-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            text-decoration: none;
+            color: #ff9800;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .errorlist {
+            color: red;
+            font-size: 14px;
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+        }
+
+        label {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="cadastro-container">
+        <h2>Cadastro</h2>
+
+        <!-- Mensagens de erro ou sucesso -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Formulário -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Campo de Usuário -->
+            <label for="{{ form.usuario.id_for_label }}">{{ form.usuario.label }}</label>
+            {{ form.usuario }}
+            {{ form.usuario.errors }}
+
+            <!-- Campo de Nome Completo -->
+            <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+            {{ form.nome }}
+            {{ form.nome.errors }}
+
+            <!-- Campo de Email -->
+            <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+            {{ form.email }}
+            {{ form.email.errors }}
+
+            <!-- Campo de Telefone -->
+            <label for="{{ form.telefone.id_for_label }}">{{ form.telefone.label }}</label>
+            {{ form.telefone }}
+            {{ form.telefone.errors }}
+
+            <!-- Campo para foto de perfil -->
+            <label for="{{ form.foto_perfil.id_for_label }}">Foto de Perfil:</label>
+            {{ form.foto_perfil }}
+            {{ form.foto_perfil.errors }}
+
+            <!-- Campo de Senha -->
+            <label for="{{ form.senha.id_for_label }}">{{ form.senha.label }}</label>
+            {{ form.senha }}
+            {{ form.senha.errors }}
+
+            <!-- Campo de Confirmação de Senha -->
+            <label for="{{ form.senha_confirmacao.id_for_label }}">{{ form.senha_confirmacao.label }}</label>
+            {{ form.senha_confirmacao }}
+            {{ form.senha_confirmacao.errors }}
+            
+            <!-- Botão de cadastro -->
+            <button type="submit" class="cadastro-button">Cadastrar</button>
+        </form>
+
+        <!-- Link de login -->
+        <div class="login-link">
+            <p>Já tem uma conta? <a href="{% url 'login' %}">Faça login</a></p>
+        </div>
+    </div>
+</body>
+</html>

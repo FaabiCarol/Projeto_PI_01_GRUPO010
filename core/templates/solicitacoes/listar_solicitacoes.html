@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2 class="titulo-solicitacoes">Solicitações</h2>
+
+    <form method="get" class="filtros">
+        <div>
+            <label for="busca">Buscar:</label>
+            <input type="text" name="busca" id="busca" value="{{ busca|default_if_none:'' }}" placeholder="Digite uma palavra-chave">
+        </div>
+        <div>
+            <label for="status">Filtrar por Status:</label>
+            <select name="status" onchange="this.form.submit()">
+                <option value="">Todos</option>
+                <option value="pendente" {% if status == "pendente" %}selected{% endif %}>Pendente</option>
+                <option value="em_andamento" {% if status == "em_andamento" %}selected{% endif %}>Em Andamento</option>
+                <option value="resolvido" {% if status == "resolvido" %}selected{% endif %}>Resolvido</option>
+            </select>
+        </div>
+        <div>
+            <label for="prioridade">Filtrar por Prioridade:</label>
+            <select name="prioridade" onchange="this.form.submit()">
+                <option value="">Todos</option>
+                <option value="verde" {% if prioridade == "verde" %}selected{% endif %}>Não Urgente</option>
+                <option value="amarelo" {% if prioridade == "amarelo" %}selected{% endif %}>Urgente, mas não importante</option>
+                <option value="vermelho" {% if prioridade == "vermelho" %}selected{% endif %}>Urgente e importante</option>
+            </select>
+        </div>
+        <button type="submit" class="botao-buscar">Buscar</button>
+    </form>
+
+    <div class="cards-container">
+        {% for s in page_obj %}
+        <div class="card">
+            <h3>{{ s.titulo }}</h3>
+            <p class="descricao" id="descricao-{{ s.id }}" 
+               data-descricao="{{ s.descricao|escapejs }}">
+                <span class="descricao-texto">{{ s.descricao|truncatechars:100 }}</span>
+                {% if s.descricao|length > 100 %}
+                    <a class="ler-mais" onclick="toggleDescricao('{{ s.id }}')">Ler mais...</a>
+                {% endif %}
+            </p>
+            <p>
+                <strong>Arquivos:</strong>
+                {% if s.arquivo %}
+                    <a href="{{ s.arquivo.url }}" target="_blank">{{ s.arquivo.name|cut:"arquivo/" }}</a>
+                {% else %}
+                    Nenhum
+                {% endif %}
+            </p>
+            <p><strong>Data:</strong> {{ s.data }}</p>
+            <p><strong>Origem:</strong> {{ s.origem }}</p>
+            <p class="prioridade">
+                <strong>Prioridade:</strong>
+                <span class="bandeirinha {{ s.prioridade }}"
+                      data-solicitacao-id="{{ s.id }}"
+                      data-prioridade-atual="{{ s.prioridade }}"
+                      onclick="alterarPrioridade('{{ s.id }}')">
+                </span>
+                <form id="form-prioridade-{{ s.id }}" action="{% url 'alterar_prioridade' s.id %}" method="post" class="inline-form hidden">
+                    {% csrf_token %}
+                    <input type="hidden" name="prioridade" id="input-prioridade-{{ s.id }}">
+                </form>
+            </p>
+            {% if s.status == "resolvido" %}
+            <p class="mensagem-resolvido">Solicitação Resolvida com sucesso!</p>
+            {% endif %}
+            <div class="status-container">
+                <form id="form-status-{{ s.id }}" action="{% url 'alterar_status' s.id %}" method="post" class="status-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" id="input-status-{{ s.id }}">
+                    <button type="button" class="status-button status-{{ s.status }}"
+                            data-solicitacao-id="{{ s.id }}"
+                            data-status-atual="{{ s.status }}"
+                            onclick="alterarStatus('{{ s.id }}')">
+                        {{ s.get_status_display }}
+                    </button>
+                </form>
+            </div>
+            <form action="{% url 'apagar_solicitacao' s.id %}" method="post" class="delete-form">
+                {% csrf_token %}
+                <button type="submit" class="delete-icon" onclick="return confirm('Tem certeza que deseja apagar?')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e36516" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="card">
+            <p>Nenhuma solicitação encontrada.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if prioridade %}&prioridade={{ prioridade }}{% endif %}">Anterior</a>
+        {% else %}
+            <a class="disabled">Anterior</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <a class="current">{{ num }}</a>
+            {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+                <a href="?page={{ num }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if prioridade %}&prioridade={{ prioridade }}{% endif %}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if prioridade %}&prioridade={{ prioridade }}{% endif %}">Próxima</a>
+        {% else %}
+            <a class="disabled">Próxima</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="nova-solicitacao-wrapper">
+        <a href="{% url 'index' %}" class="nova-solicitacao">Nova Solicitação</a>
+    </div>
+</div>
+
+<style>
+    /* Definir a fonte para toda a página */
+    body {
+        font-family: Arial, sans-serif !important;
+        background-image: url('{% static "imagens-pi/image.png" %}');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    /* Menu com transparência */
+    .menu {
+        background-color: rgba(227, 101, 22, 0.9);
+        padding: 15px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+    .menu ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+    }
+    .menu li {
+        display: inline;
+    }
+    .menu a {
+        color: rgb(255, 255, 255);
+        text-decoration: none;
+        font-size: 1.2em;
+        padding: 10px 20px;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+    .menu a:hover {
+        background-color: #b95212;
+    }
+
+    /* Container */
+    .container {
+        max-width: 1700px;
+        margin: 20px auto;
+        color: aliceblue;
+    }
+
+    /* Filtros */
+    .filtros {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+    .filtros div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .filtros label {
+        color: aliceblue;
+        font-size: 1.1em;
+    }
+    .filtros input[type="text"] {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        font-size: 1em;
+        width: 200px;
+    }
+    .filtros select {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        font-size: 1em;
+    }
+    .botao-buscar {
+        background-color: #da5f13;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    .botao-buscar:hover {
+        background-color: #b55414;
+    }
+
+    /* Cards Container */
+    .cards-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        justify-items: center;
+    }
+
+    /* Card */
+    .card {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 25px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: #333;
+        box-sizing: border-box;
+        position: relative;
+        padding-bottom: 40px; /* Espaço para os botões no canto inferior */
+    }
+    .card h3 {
+        margin: 0 0 12px;
+        font-size: 1.6em;
+        color: rgb(205, 118, 24);
+    }
+    .card p {
+        margin: 8px 0;
+        font-size: 1.1em;
+    }
+    .card .descricao {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .card .descricao-texto {
+        flex: 1;
+        word-break: break-word;
+    }
+    .card .ler-mais {
+        color: rgb(205, 118, 24);
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 1em;
+        white-space: nowrap;
+    }
+    .card .ler-mais:hover {
+        color: rgb(205, 118, 24);
+        text-decoration: underline;
+    }
+    .card a[href*="/media/"] {
+        color: rgb(255, 94, 0);
+        text-decoration: none;
+        font-size: 1em;
+    }
+    .card a[href*="/media/"]:hover {
+        color: rgb(255, 102, 0);
+        text-decoration: underline;
+    }
+
+    /* Bandeirinha Retangular para Prioridade */
+    .card .prioridade {
+        padding: 8px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .bandeirinha {
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+        position: relative;
+        cursor: pointer;
+    }
+    .bandeirinha::before {
+        content: '';
+        display: block;
+        width: 30px;
+        height: 15px;
+        position: absolute;
+        top: 2px;
+        left: 5px;
+        animation: wave 2s infinite ease-in-out;
+    }
+    .bandeirinha::after {
+        content: '';
+        display: block;
+        width: 2px;
+        height: 20px;
+        background-color: #333;
+        position: absolute;
+        top: 0;
+        left: 3px;
+    }
+    .bandeirinha.verde::before {
+        background-color: #28a745;
+    }
+    .bandeirinha.amarelo::before {
+        background-color: #ffc107;
+    }
+    .bandeirinha.vermelho::before {
+        background-color: #dc3545;
+    }
+    .bandeirinha.loading::before {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Animação de "voar" (ondulação) */
+    @keyframes wave {
+        0% {
+            transform: translateY(0) skewY(0deg);
+        }
+        50% {
+            transform: translateY(2px) skewY(2deg);
+        }
+        100% {
+            transform: translateY(0) skewY(0deg);
+        }
+    }
+
+    /* Mensagem de Resolvido */
+    .mensagem-resolvido {
+        background-color: #28a745;
+        color: white;
+        padding: 8px;
+        border-radius: 4px;
+        margin: 8px 0;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    /* Status Button */
+    .status-container {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+    }
+    .status-form {
+        margin: 0;
+    }
+    .status-button {
+        background-color: #ccc;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        color: white;
+        transition: background-color 0.3s;
+    }
+    .status-button.status-pendente {
+        background-color: #ff0000;
+    }
+    .status-button.status-em_andamento {
+        background-color: #f1e607;
+    }
+    .status-button.status-resolvido {
+        background-color: #0b910b;
+    }
+    .status-button:hover {
+        opacity: 0.9;
+    }
+    .status-button.loading {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Formulário de Apagar */
+    .delete-form {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+    }
+    .delete-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .delete-icon svg {
+        width: 16px;
+        height: 16px;
+        transition: stroke 0.3s;
+    }
+    .delete-icon:hover svg {
+        stroke: #d32f2f;
+    }
+
+    /* Paginação */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 20px auto;
+        text-align: center;
+        width: 100%;
+    }
+    .pagination a {
+        color: rgb(255, 140, 0);
+        text-decoration: none;
+        padding: 8px 12px;
+        border: 1px solid rgb(255, 140, 0);
+        border-radius: 4px;
+        font-size: 1em;
+    }
+    .pagination a:hover {
+        background-color: rgb(187, 116, 30);
+        color: white;
+    }
+    .pagination .current {
+        background-color: rgb(255, 140, 0);
+        color: white;
+        border: none;
+    }
+    .pagination .disabled {
+        color: #ccc;
+        border: 1px solid #ccc;
+        pointer-events: none;
+    }
+
+    /* Nova Solicitação */
+    .nova-solicitacao-wrapper {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+    }
+    .nova-solicitacao {
+        background-color: rgb(255, 140, 0);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 1.1em;
+    }
+    .nova-solicitacao:hover {
+        background-color: rgb(213, 130, 27);
+    }
+    /* Novo estilo para destacar o <h2> */
+    .titulo-solicitacoes {
+        color: rgb(0, 0, 0);
+        font-size: 2.5em;
+        font-weight: bold;
+        text-align: center;
+        background-color: rgba(255, 140, 0, 0.1);
+        padding: 10px 20px;
+        border-bottom: 3px solid rgb(255, 140, 0);
+        margin-bottom: 30px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+</style>
+
+<script>
+function toggleDescricao(id) {
+    const descricao = document.getElementById(`descricao-${id}`);
+    const textoCompleto = descricao.getAttribute('data-descricao');
+    const textoTruncado = textoCompleto.length > 100 ? textoCompleto.substring(0, 100) + '...' : textoCompleto;
+    
+    if (descricao.classList.contains('expanded')) {
+        descricao.innerHTML = `<span class="descricao-texto">${textoTruncado}</span>` + 
+                             (textoCompleto.length > 100 ? `<a class="ler-mais" onclick="toggleDescricao('${id}')">Ler mais...</a>` : '');
+        descricao.classList.remove('expanded');
+    } else {
+        descricao.innerHTML = `<span class="descricao-texto">${textoCompleto}</span>` + 
+                             (textoCompleto.length > 100 ? `<a class="ler-mais" onclick="toggleDescricao('${id}')">Ler menos...</a>` : '');
+        descricao.classList.add('expanded');
+    }
+}
+
+function alterarPrioridade(solicitacaoId) {
+    const bandeirinha = document.querySelector(`.bandeirinha[data-solicitacao-id="${solicitacaoId}"]`);
+    const prioridadeAtual = bandeirinha.getAttribute('data-prioridade-atual');
+    let novaPrioridade;
+
+    if (prioridadeAtual === 'verde') {
+        novaPrioridade = 'amarelo';
+    } else if (prioridadeAtual === 'amarelo') {
+        novaPrioridade = 'vermelho';
+    } else {
+        novaPrioridade = 'verde';
+    }
+
+    bandeirinha.classList.add('loading');
+
+    const form = document.getElementById(`form-prioridade-${solicitacaoId}`);
+    const formData = new FormData(form);
+    formData.set('prioridade', novaPrioridade);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bandeirinha.classList.remove('verde', 'amarelo', 'vermelho');
+            bandeirinha.classList.add(novaPrioridade);
+            bandeirinha.setAttribute('data-prioridade-atual', novaPrioridade);
+        } else {
+            alert('Erro ao atualizar a prioridade: ' + (data.error || 'Tente novamente.'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao atualizar a prioridade. Verifique sua conexão.');
+    })
+    .finally(() => {
+        bandeirinha.classList.remove('loading');
+    });
+}
+
+function alterarStatus(solicitacaoId) {
+    const button = document.querySelector(`.status-button[data-solicitacao-id="${solicitacaoId}"]`);
+    const statusAtual = button.getAttribute('data-status-atual');
+    let novoStatus, novoTexto;
+
+    if (statusAtual === 'pendente') {
+        novoStatus = 'em_andamento';
+        novoTexto = 'Em Andamento';
+    } else if (statusAtual === 'em_andamento') {
+        novoStatus = 'resolvido';
+        novoTexto = 'Resolvido';
+    } else {
+        novoStatus = 'pendente';
+        novoTexto = 'Pendente';
+    }
+
+    button.classList.add('loading');
+
+    const form = document.getElementById(`form-status-${solicitacaoId}`);
+    const formData = new FormData(form);
+    formData.set('status', novoStatus);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.classList.remove('status-pendente', 'status-em_andamento', 'status-resolvido');
+            button.classList.add(`status-${novoStatus}`);
+            button.setAttribute('data-status-atual', novoStatus);
+            button.textContent = novoTexto;
+
+            const mensagemResolvido = document.querySelector(`#form-status-${solicitacaoId}`).closest('.card').querySelector('.mensagem-resolvido');
+            if (novoStatus === 'resolvido') {
+                if (!mensagemResolvido) {
+                    const p = document.createElement('p');
+                    p.className = 'mensagem-resolvido';
+                    p.textContent = 'Solicitação Resolvida com sucesso!';
+                    button.closest('.card').insertBefore(p, button.closest('.status-container'));
+                }
+            } else {
+                if (mensagemResolvido) {
+                    mensagemResolvido.remove();
+                }
+            }
+        } else {
+            alert('Erro ao atualizar o status: ' + (data.error || 'Tente novamente.'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao atualizar o status. Verifique sua conexão.');
+    })
+    .finally(() => {
+        button.classList.remove('loading');
+    });
+}
+</script>
+{% endblock %}
