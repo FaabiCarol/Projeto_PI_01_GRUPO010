@@ -80,12 +80,8 @@ WSGI_APPLICATION = 'projeto_pi_01.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'condominio2',
-        'USER': 'root',
-        'PASSWORD': '23101995fabi*/',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

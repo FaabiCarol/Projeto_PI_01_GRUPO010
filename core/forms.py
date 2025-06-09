@@ -2,7 +2,6 @@ from django import forms
 from django.contrib.auth.models import User
 from .models import Morador, Solicitacao
 
-# Formulário para Morador (mantido como fornecido)
 class MoradorForm(forms.ModelForm):
     usuario = forms.CharField(required=True, label="Nome de Usuário")
     nome = forms.CharField(required=True, label="Nome Completo")
