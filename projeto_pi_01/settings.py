@@ -28,8 +28,13 @@ SECRET_KEY = 'django-insecure-9i(h)z3+k+7%9@$8g-c=z&wbnoj&(6urcm(u7nmo8nni&4lhsl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Render detecta a variável de ambiente DJANGO_SETTINGS_MODULE
+if os.getenv('RENDER'):
+    DEBUG = os.environ.get('DEBUG', '') != 'False'
 
 # Application definition
 
